@@ -100,6 +100,12 @@ public partial class PakFileReader
     private const ulong OFFSET = 0xcbf29ce484222325;
     private const ulong PRIME = 0x00000100000001b3;
 
+    /// <summary>
+    /// Where CoAReadIndexUpdated keeps the names it recovers (&lt;pak name&gt;.txt). Null, the default, means the game folder: &lt;paks&gt;\..\GeneratedIndex.
+    /// A tool that must not write into the game folder sets this before mounting.
+    /// </summary>
+    public static string? GeneratedIndexDirectory { get; set; }
+
     private void CoAReadIndexUpdated(StringComparer pathComparer)
     {
         bDecrypted = true;
@@ -223,10 +229,13 @@ public partial class PakFileReader
 
             List<string> foundFiles = [];
             var packageNamesFile = System.IO.Path.Combine(System.IO.Path.ChangeExtension(Path, "txt"));
-            var parentDir = Directory.GetParent(Path)?.Parent;
-            if (parentDir is not null)
+            var baseFileName = System.IO.Path.GetFileNameWithoutExtension(Path);
+            if (GeneratedIndexDirectory is not null)
             {
-                var baseFileName = System.IO.Path.GetFileNameWithoutExtension(Path);
+                packageNamesFile = System.IO.Path.Combine(GeneratedIndexDirectory, baseFileName + ".txt");
+            }
+            else if (Directory.GetParent(Path)?.Parent is { } parentDir)
+            {
                 packageNamesFile = System.IO.Path.Combine(parentDir.FullName, "GeneratedIndex", baseFileName + ".txt");
             }
 
