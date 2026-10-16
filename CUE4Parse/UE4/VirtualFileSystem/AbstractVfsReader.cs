@@ -15,6 +15,9 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         public string Name { get; }
         public long ReadOrder { get; private set; }
 
+        /// <summary>When set, the read order a provider wants for this reader; it replaces the one worked out from the file name once the mount point is validated.</summary>
+        public long? ReadOrderOverride { get; set; }
+
         public IReadOnlyDictionary<string, GameFile> Files { get; protected set; }
         public int FileCount => Files.Count;
 
@@ -73,6 +76,12 @@ namespace CUE4Parse.UE4.VirtualFileSystem
         }
 
         private void VerifyReadOrder()
+        {
+            VerifyReadOrderFromName();
+            if (ReadOrderOverride is { } overridden) ReadOrder = overridden;
+        }
+
+        private void VerifyReadOrderFromName()
         {
             ReadOrder = GetPakOrderFromPakFilePath();
             if (!Name.EndsWith("_P.pak", StringComparison.OrdinalIgnoreCase) && !Name.EndsWith("_P.utoc", StringComparison.OrdinalIgnoreCase) && !Name.EndsWith("_P.o.utoc", StringComparison.OrdinalIgnoreCase))
